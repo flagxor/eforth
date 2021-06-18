@@ -10,10 +10,13 @@ WINDOWS = $(OUT)/windows
 ESP32 = $(OUT)/esp32
 DEPLOY = $(OUT)/deploy
 
+ifneq ($(OS),Windows_NT)
+  OS = $(shell uname -s)
+endif
+
 CFLAGS_COMMON = -O2 -I ./ -I $(OUT)
 
 CFLAGS_MINIMIZE = \
-                -s \
                 -DUEFORTH_MINIMAL \
                 -fno-exceptions \
                 -ffreestanding \
@@ -22,22 +25,34 @@ CFLAGS_MINIMIZE = \
                 -fno-stack-protector \
                 -fomit-frame-pointer \
                 -mno-stack-arg-probe \
-                -fno-ident -Wl,--build-id=none \
+                -fno-ident \
                 -ffunction-sections -fdata-sections \
                 -fmerge-all-constants
 CFLAGS = $(CFLAGS_COMMON) \
          $(CFLAGS_MINIMIZE) \
          -Wall \
-         -Werror \
-         -no-pie \
-         -Wl,--gc-sections
-STRIP_ARGS = -S \
-             --strip-unneeded \
-             --remove-section=.note.gnu.gold-version \
-             --remove-section=.comment \
-             --remove-section=.note \
-             --remove-section=.note.gnu.build-id \
-             --remove-section=.note.ABI-tag
+         -Werror
+
+ifeq ($(OS),Darwin)
+  CFLAGS += -Wl,-dead_strip
+else
+  CFLAGS_MINIMIZE += -Wl,--build-id=none
+  CFLAGS += -s -Wl,--gc-sections -no-pie -Wl,--build-id=none
+endif
+
+STRIP_ARGS = -S
+
+ifeq ($(OS),Darwin)
+ STRIP_ARGS += -x
+else
+ STRIP_ARGS += --strip-unneeded \
+              --remove-section=.note.gnu.gold-version \
+              --remove-section=.comment \
+              --remove-section=.note \
+              --remove-section=.note.gnu.build-id \
+              --remove-section=.note.ABI-tag
+endif
+
 LIBS=-ldl
 
 WIN_CFLAGS = $(CFLAGS_COMMON) \

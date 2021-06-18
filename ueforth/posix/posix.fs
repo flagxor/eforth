@@ -51,8 +51,13 @@ z" readdir" 1 sysfunc readdir
 : .d_name ( a -- z ) 19 + ;
 
 ( Errno )
-z" __errno_location" 0 sysfunc __errno_location
-: errno ( -- n ) __errno_location l@ ;
+( : errno ( -- n )
+( errno is now defined as primitive in posix_main.c )
+( The memory cell containing the error number is called )
+( differently in Linux __errno_location and MacOS __error )
+( and probably different in other Posix compatible systems. )
+( The only valid interface is the symbol "errno". )
+( https://pubs.opengroup.org/onlinepubs/9699919799/functions/errno.html )
 
 ( Default Pipes )
 0 constant stdin

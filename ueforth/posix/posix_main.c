@@ -1,5 +1,7 @@
+#define _GNU_SOURCE
 #include <dlfcn.h>
 #include <sys/mman.h>
+#include <sys/errno.h>
 
 #include "common/opcodes.h"
 #include "common/calling.h"
@@ -9,7 +11,8 @@
 #define STACK_SIZE (64 * 1024)
 
 #define PLATFORM_OPCODE_LIST \
-  Y(DLSYM, tos = (cell_t) dlsym(a1, a0); --sp) \
+  Y(errno, DUP; tos = (cell_t) errno) \
+  Y(DLSYM, tos = (cell_t) dlsym(a1 ? a1 : RTLD_DEFAULT, a0); --sp) \
   CALLING_OPCODE_LIST \
 
 #include "common/core.h"
